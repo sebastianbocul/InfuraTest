@@ -1,13 +1,16 @@
 package com.sebix.testinfuraapi.ui.pages.newwallet
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.util.Log
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.lifecycle.ViewModel
 import com.sebix.testinfuraapi.testPassword
 import com.sebix.testinfuraapi.utils.MnemonicSeedGenerator
 import com.sebix.testinfuraapi.utils.SharedPreferencesHelper
 import com.sebix.testinfuraapi.utils.SharedPreferencesKeys.fullWalletPathKey
-import com.sebix.testinfuraapi.utils.SharedPreferencesKeys.walletFileKey
+import com.sebix.testinfuraapi.utils.SharedPreferencesKeys.walletFileNameKey
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -20,16 +23,12 @@ import java.io.File
 import java.security.Provider
 import java.security.Security
 import javax.inject.Inject
-import kotlin.coroutines.suspendCoroutine
 
 @HiltViewModel
 class NewWalletViewModel @Inject constructor(
     private val mnemonicSeedGenerator: MnemonicSeedGenerator,
     private val sharedPreferencesHelper: SharedPreferencesHelper
 ) : ViewModel() {
-    init {
-        setupBouncyCastle()
-    }
 
     var credentials: Credentials? = null
     val TAG = "NewWalletViewModel"
@@ -51,7 +50,7 @@ class NewWalletViewModel @Inject constructor(
                 val fullPath = "$path/$walletFile"
                 Log.d(TAG, "walletFile full path $fullPath")
                 credentials = WalletUtils.loadCredentials(testPassword, fullPath)
-                sharedPreferencesHelper.saveString(walletFileKey, walletFile)
+                sharedPreferencesHelper.saveString(walletFileNameKey, walletFile)
                 sharedPreferencesHelper.saveString(fullWalletPathKey, fullPath)
                 Log.d(TAG, "Wallet address : ${credentials?.address}")
             } catch (e: Exception) {
@@ -60,34 +59,18 @@ class NewWalletViewModel @Inject constructor(
         }
     }
 
-    fun setupBouncyCastle() {
-        val provider: Provider = Security.getProvider(BouncyCastleProvider.PROVIDER_NAME)
-            ?: // Web3j will set up the provider lazily when it's first used.
-            return
-        if (provider.javaClass == BouncyCastleProvider::class.java) {
-            // BC with same package name, shouldn't happen in real life.
-            return
-        }
-        // Android registers its own BC provider. As it might be outdated and might not include
-        // all needed ciphers, we substitute it with a known BC bundled in the app.
-        // Android's BC has its package rewritten to "com.android.org.bouncycastle" and because
-        // of that it's possible to have another BC implementation loaded in VM.
-        Security.removeProvider(BouncyCastleProvider.PROVIDER_NAME)
-        Security.insertProviderAt(BouncyCastleProvider(), 1)
-    }
-
     fun createNewWalletRunBlocking(context: Context, mnemonic: String): String {
         return runBlocking {
             try {
                 val path = context.filesDir.path
-                val walletFile =
+                val walletFileName =
                     WalletUtils.generateNewWalletFile(testPassword, File(path), false)
-                Log.d(TAG, "walletFile $walletFile")
+                Log.d(TAG, "walletFile $walletFileName")
                 Log.d(TAG, "mnemonic:  $mnemonic")
-                val fullPath = "$path/$walletFile"
+                val fullPath = "$path/$walletFileName"
                 Log.d(TAG, "walletFile full path $fullPath")
                 credentials = WalletUtils.loadCredentials(testPassword, fullPath)
-                sharedPreferencesHelper.saveString(walletFileKey, walletFile)
+                sharedPreferencesHelper.saveString(walletFileNameKey, walletFileName)
                 sharedPreferencesHelper.saveString(fullWalletPathKey, fullPath)
                 Log.d(TAG, "Wallet address : ${credentials?.address}")
                 "SUCCESS"
@@ -96,5 +79,11 @@ class NewWalletViewModel @Inject constructor(
                 "ERROR"
             }
         }
+    }
+
+    fun copyToClipboard(context: Context, text: CharSequence) {
+        val clipboard = getSystemService(context, ClipboardManager::class.java)
+        val clip = ClipData.newPlainText("seeds", text)
+        clipboard!!.setPrimaryClip(clip)
     }
 }

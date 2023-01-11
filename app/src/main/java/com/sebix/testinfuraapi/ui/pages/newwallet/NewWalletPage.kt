@@ -82,6 +82,10 @@ fun NewWalletPage(navController: NavController) {
                 Spacer(modifier = Modifier.padding(0.dp))
 
                 TextButton(onClick = {
+                    mainViewModel.copyToClipboard(
+                        context = context,
+                        text = mnemonicSeeds
+                    )
                 }) {
                     Text(
                         text = "Copy",

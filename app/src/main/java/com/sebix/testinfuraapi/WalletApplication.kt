@@ -6,4 +6,4 @@ import dagger.hilt.android.HiltAndroidApp
 @HiltAndroidApp
 class WalletApplication : Application() {
 }
-const val testPassword = "test1234"
+const val testPassword = "test"

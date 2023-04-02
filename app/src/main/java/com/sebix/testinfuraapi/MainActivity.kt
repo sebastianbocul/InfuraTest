@@ -1,6 +1,5 @@
 package com.sebix.testinfuraapi
 
-import ImportWalletPage
 import com.sebix.testinfuraapi.ui.pages.newwallet.NewWalletPage
 import StartPage
 import android.os.Bundle
@@ -38,10 +37,11 @@ class MainActivity : ComponentActivity() {
             composable(
                 "new_wallet_page",
                 content = { NewWalletPage(navController = navController) })
-            composable(
-                "import_wallet_page",
-                content = { ImportWalletPage(navController = navController) })
-        })
+//            composable(
+//                "import_wallet_page",
+//                content = { ImportWalletPage(navController = navController) })
+        }
+        )
     }
 }
 

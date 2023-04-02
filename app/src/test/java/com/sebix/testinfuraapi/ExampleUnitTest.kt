@@ -16,6 +16,7 @@ class ExampleUnitTest {
     }
     @Test
     fun addition_isNotCorrect() {
+        //bitrise trigger test
         assertNotEquals(4, 4 + 2)
     }
 }
